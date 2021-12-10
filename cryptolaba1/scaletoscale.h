@@ -1,0 +1,1 @@
+char* bintohex(char* bin);
