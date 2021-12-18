@@ -1,7 +1,7 @@
 #include "generator.h"
 
 
-char* hash_modes[] = {"mda5", "sha1"};
+char* hash_modes[] = {"md5", "sha1"};
 char* cipher_modes[] = {"3des", "aes128", "aes192", "aes256"};
 char** modes[] = {hash_modes, cipher_modes};
 

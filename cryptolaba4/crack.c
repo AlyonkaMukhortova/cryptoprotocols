@@ -13,7 +13,7 @@ int main(int argc, char** argv) {
   else{
     printf("Valid file!\n");
     int a = cracker(argv[argc - 1], v);
-    printf("%d\n", a);
+
     return 0;
   }
 }

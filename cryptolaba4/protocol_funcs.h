@@ -64,7 +64,7 @@ static void (*fdecipher[4])(unsigned char *, size_t,
 				unsigned char *);
 
 void to_file (int mode_hash, int mode_cipher, unsigned char* nonce,
-              unsigned char* iv, unsigned char* cipher_text, char* file_name);
+              unsigned char* iv, char* file_name);
 
 int file_checker(char* file_name);
 
