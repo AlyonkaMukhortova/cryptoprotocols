@@ -11,7 +11,6 @@
 #define TEXT_LEN 60
 #define ENCRYPT -11
 #define DECRYPT -12
-#define PROC_NUM 3
 
 
 int mode_key_bytes[4];
@@ -76,7 +75,6 @@ void cipher(int mode_hash, int mode_cipher, unsigned char* password,
 unsigned char* decrypt (char* file_name, unsigned char* password, char* output);
 int decipher (int mode_hash, int mode_cipher, unsigned char* nonce,
   unsigned char* iv, unsigned char* text, unsigned char* password, int text_len);
-int cracker_forked (char* file_name, int v);
 int cracker (char* file_name, int v);
 void analyse_file (char* file_name, int* mode_hash, int* mode_cipher, unsigned char** nonce,
    unsigned char** iv, unsigned char** text, int* text_len);
