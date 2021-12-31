@@ -258,19 +258,11 @@ void cipher(int mode_hash, int mode_cipher, unsigned char* password,
 	nonce1 = concatenate(nonce1, nonce, 0, 64);
   new_text = concatenate(new_text, text1, 8, strlen((char*)text1));
 	int text_len1 = text_len + 8;
-	for (int i = 0; i < text_len1; i++) {
-		printf("%02x", new_text[i]);
-	}
-	printf("\nTEXT\n");
 	if ((text_len + 8) % mode_key_bytes[mode_cipher] != 0) {
 		text_len1 += mode_key_bytes[mode_cipher] - ((text_len + 8) % mode_key_bytes[mode_cipher]);
 		zeroes = (unsigned char*)calloc(mode_key_bytes[mode_cipher] - ((text_len + 8) % mode_key_bytes[mode_cipher]), sizeof(unsigned char));
 		new_text = concatenate(new_text, zeroes, text_len + 8, text_len1 - text_len - 8);
 	}
-	for (int i = 0; i < text_len1; i++) {
-		printf("%02x", new_text[i]);
-	}
-	printf("\nTEXT\n%d\n%d\n", text_len1, mode_key_bytes[mode_cipher]);
   fhmac[mode_hash](nonce, 64, password, 4, hmac);
 	int key_len = 0;
   key = concatenate(key, hmac, key_len, mode_hmac_bytes[mode_hash]);
@@ -330,19 +322,11 @@ unsigned char* decrypt (char* file_name, unsigned char* password, char* output) 
 	 unsigned char* iv1 = (unsigned char*)calloc(1, sizeof(unsigned char));
    iv1 = concatenate(iv1, iv, 0, mode_iv_bytes[mode_cipher]);
 	 int text_len = text_len1;
-	 for (int i = 0; i < text_len; i++) {
- 		printf("%02x", text[i]);
- 	}
- 	printf("\nTEXT\n");
 	 if ((text_len1) % mode_key_bytes[mode_cipher] != 0) {
 			 text_len += mode_key_bytes[mode_cipher] - (text_len1) % mode_key_bytes[mode_cipher];
 			 zeroes = (unsigned char*)calloc(mode_key_bytes[mode_cipher] - ((text_len1) % mode_key_bytes[mode_cipher]), sizeof(unsigned char));
 			 text = concatenate(text, zeroes, text_len1, text_len - text_len1);
 		 }
-	for (int i = 0; i < text_len; i++) {
-		printf("%02x", text[i]);
-	}
-	printf("\nTEXT\n%d\n%d\n", text_len, mode_key_bytes[mode_cipher]);
 	 int key_len = 0;
 	 fhmac[mode_hash](nonce, 64, password, 4, hmac);
    key = concatenate(key, hmac, 0, mode_hmac_bytes[mode_hash]);
@@ -386,7 +370,6 @@ void analyse_file (char* file_name, int* mode_hash, int* mode_cipher, unsigned c
   *text = (unsigned char*)malloc(size - offset);
   fread(*text, sizeof(unsigned char), size - offset, fd);
   *text_len = size - offset;
-	printf("%d\n", *text_len);
 }
 
 
