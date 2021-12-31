@@ -484,7 +484,7 @@ int cracker_forked (char* file_name, int v) {
   for (unsigned int i = start; i < end; i++) {
 		if((!(i % 0xffff)) && i != 0 && v == 0){
 			last = clock();
-			printf("Current: %08x-%08x | Speed %d c/ms\n", i, i + 0xffff,
+			printf("Current: %08x-%08x | Speed %d c/ ms\n", i, i + 0xffff,
 						0x1000 / (int)((last - first) * 1000 /CLOCKS_PER_SEC));
 			first = clock();
 		}
