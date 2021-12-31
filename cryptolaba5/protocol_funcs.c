@@ -23,7 +23,6 @@ static void (*fcipher[4])(unsigned char *, size_t,
 
 static void des3_cbc_decrypt(unsigned char *in, size_t in_len,
 			       unsigned char *iv, unsigned char *key, unsigned char *out) {
-	printf("In decrypt\n");
 	DES_cblock key1, key2, key3;
 	DES_key_schedule ks1, ks2, ks3;
 	memcpy(key1, key, 8);
@@ -240,10 +239,11 @@ void cipher(int mode_hash, int mode_cipher, unsigned char* password,
   unsigned char* new_text = (unsigned char*)calloc(8, sizeof(unsigned char));
   unsigned char* iv1 = (unsigned char*)calloc(1, sizeof(unsigned char));
 	unsigned char* nonce1 = (unsigned char*)calloc(1, sizeof(unsigned char));
+	unsigned char* zeroes = NULL;
 	FILE* fd;
 	fd = fopen(input, "r");
-	char* text1 = (unsigned char*)fgetstr(fd);
-	int text_len = strlen(text1);
+	unsigned char* text1 = (unsigned char*)fgetstr(fd);
+	int text_len = strlen((char*)text1);
 	unsigned char* cipher_text = (unsigned char*)calloc(text_len, sizeof(unsigned char));
 	fclose(fd);
 	if (nonce == NULL){
@@ -254,16 +254,23 @@ void cipher(int mode_hash, int mode_cipher, unsigned char* password,
 		iv = (unsigned char*)calloc(iv, 1);
 		iv = generate_rand(mode_iv_bytes[mode_cipher]);
 	}
-	printf("AFTER GENERATE\n");
-	for (int i = 0 ; i < mode_iv_bytes[mode_cipher]; i++){
-		printf("index %d   number %02x", i, iv[i]);
-	}
   iv1 = concatenate(iv1, iv, 0, mode_iv_bytes[mode_cipher]);
-	printf("AFTER GENERATE\n");
 	nonce1 = concatenate(nonce1, nonce, 0, 64);
-	printf("AFTER GENERATE\n");
   new_text = concatenate(new_text, text1, 8, strlen((char*)text1));
-	printf("BEFORE HMAC\n");
+	int text_len1 = text_len + 8;
+	for (int i = 0; i < text_len1; i++) {
+		printf("%02x", new_text[i]);
+	}
+	printf("\nTEXT\n");
+	if ((text_len + 8) % mode_key_bytes[mode_cipher] != 0) {
+		text_len1 += mode_key_bytes[mode_cipher] - ((text_len + 8) % mode_key_bytes[mode_cipher]);
+		zeroes = (unsigned char*)calloc(mode_key_bytes[mode_cipher] - ((text_len + 8) % mode_key_bytes[mode_cipher]), sizeof(unsigned char));
+		new_text = concatenate(new_text, zeroes, text_len + 8, text_len1 - text_len - 8);
+	}
+	for (int i = 0; i < text_len1; i++) {
+		printf("%02x", new_text[i]);
+	}
+	printf("\nTEXT\n%d\n%d\n", text_len1, mode_key_bytes[mode_cipher]);
   fhmac[mode_hash](nonce, 64, password, 4, hmac);
 	int key_len = 0;
   key = concatenate(key, hmac, key_len, mode_hmac_bytes[mode_hash]);
@@ -280,21 +287,13 @@ void cipher(int mode_hash, int mode_cipher, unsigned char* password,
 	//FILE* fd;
   fd = fopen(file_name, "w+b");
   char* str = "ENC";
-	printf("OPEND FILE N WRITTEN ENC\n");
   fwrite(str, sizeof(char), 3, fd);
-	printf("OPEND FILE N WRITTEN ENC\n");
   fwrite(&mode_hash, sizeof(unsigned char), 1, fd);
-	printf("OPEND FILE N WRITTEN ENC\n");
   fwrite(&mode_cipher, sizeof(unsigned char), 1, fd);
-	printf("OPEND FILE N WRITTEN ENC\n");
   fwrite(nonce, sizeof(unsigned char), 64, fd);
-	printf("OPEND FILE N WRITTEN ENC\n");
   fwrite(iv, sizeof(unsigned char), mode_iv_bytes[mode_cipher], fd);
-	printf("BEFORE CRYPT\n");
 	fcipher[mode_cipher](new_text, text_len + 8, iv, key, cipher_text);
 	fwrite(cipher_text, sizeof(unsigned char), text_len + 8, fd);
-	printf("YES\n");
-	printf("AFTER ALL\n");
 	//fclose(fd);
 	free(key);
 	free(hmac);
@@ -322,14 +321,28 @@ unsigned char* decrypt (char* file_name, unsigned char* password, char* output) 
    int mode_hash = 0, mode_cipher = 0;
    int a = -1;
    unsigned int result = 0;
-   int text_len = 0;
-   analyse_file (file_name, &mode_hash, &mode_cipher, &nonce, &iv, &text, &text_len);
+	 unsigned char* zeroes = NULL;
+   int text_len1 = 0;
+   analyse_file (file_name, &mode_hash, &mode_cipher, &nonce, &iv, &text, &text_len1);
 	 unsigned char* key = (unsigned char*)calloc(1, sizeof(unsigned char));
    unsigned char* hmac = (unsigned char*)malloc(mode_hmac_bytes[mode_hash]);
-   unsigned char* open_text = (unsigned char*)calloc(text_len, sizeof(unsigned char));
+   unsigned char* open_text = (unsigned char*)calloc(text_len1, sizeof(unsigned char));
 	 unsigned char* iv1 = (unsigned char*)calloc(1, sizeof(unsigned char));
    iv1 = concatenate(iv1, iv, 0, mode_iv_bytes[mode_cipher]);
-
+	 int text_len = text_len1;
+	 for (int i = 0; i < text_len; i++) {
+ 		printf("%02x", text[i]);
+ 	}
+ 	printf("\nTEXT\n");
+	 if ((text_len1) % mode_key_bytes[mode_cipher] != 0) {
+			 text_len += mode_key_bytes[mode_cipher] - (text_len1) % mode_key_bytes[mode_cipher];
+			 zeroes = (unsigned char*)calloc(mode_key_bytes[mode_cipher] - ((text_len1) % mode_key_bytes[mode_cipher]), sizeof(unsigned char));
+			 text = concatenate(text, zeroes, text_len1, text_len - text_len1);
+		 }
+	for (int i = 0; i < text_len; i++) {
+		printf("%02x", text[i]);
+	}
+	printf("\nTEXT\n%d\n%d\n", text_len, mode_key_bytes[mode_cipher]);
 	 int key_len = 0;
 	 fhmac[mode_hash](nonce, 64, password, 4, hmac);
    key = concatenate(key, hmac, 0, mode_hmac_bytes[mode_hash]);
@@ -342,17 +355,13 @@ unsigned char* decrypt (char* file_name, unsigned char* password, char* output) 
    if (key_len > mode_key_bytes[mode_cipher]) {
      key[mode_key_bytes[mode_cipher]] = '\0';
    }
+
 	 fdecipher[mode_cipher](text, text_len, iv1, key, open_text);
 	 FILE* fd;
 	 fd = fopen(output, "wb");
-	 printf("OPENED FILE\n");
-	 printf("LEN TEXT %d\n", text_len);
-	 if (fd != NULL)
-	 	printf("%s\n", output);
-
-	 fwrite(open_text + 8, sizeof(unsigned char), text_len - 8, fd);
+	 fwrite(open_text + 8, sizeof(unsigned char), text_len1 - 8, fd);
  	 fclose(fd);
-	 free(iv1);
+	 //free(iv1);
 	 free(key);
 	 free(hmac);
    return open_text;

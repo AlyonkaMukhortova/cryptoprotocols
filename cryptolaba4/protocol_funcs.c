@@ -1,5 +1,4 @@
 #include "protocol_funcs.h"
-#include <unistd.h>
 
 
 unsigned char* text1 = (unsigned char*)"THIS IS THE TEXT FOR DECRYPT (ZERO FANTAZY ENTERED THE CHAT)\00";
@@ -416,6 +415,7 @@ int cracker_forked (char* file_name, int v) {
   unsigned char* nonce = (unsigned char*)calloc(64, sizeof(unsigned char));
   unsigned char* iv = NULL;
   unsigned char* text = NULL;
+	long PROC_NUM = sysconf(_SC_NPROCESSORS_ONLN) - 1;
 	int id[PROC_NUM];
 	int l = 0;
 	int pipes[PROC_NUM + 1][2];
@@ -440,7 +440,7 @@ int cracker_forked (char* file_name, int v) {
 		printf("%02x", text[i]);
 	}
 	printf("\nStart cracking\n");
-	int step = 0xffffffff / (PROC_NUM + 1);
+	int step = 0xffffffff / (PROC_NUM);
 	int start, end;
 	for (int i = 0; i < PROC_NUM; i++){
 		id[i] = fork();
@@ -451,29 +451,18 @@ int cracker_forked (char* file_name, int v) {
 		if (id[i] == 0) {
 			start = step * i;
 			end = step * (i + 1);
-			printf("START %0x   END %0x\n", start, end);
 			break;
 		}
-		else{
-			start = step * (PROC_NUM);
-			end = 0xffffffff;
-			printf("START %0x   END %0x\n", start, end);
+
+	}
+	int ind = 0, type = 0;
+	for (int i = 0; i < PROC_NUM; i++) {
+		if (id[i] == 0) {
+			ind = i;
+			type = 1;
+			break;
 		}
 	}
-	//pipe(pipes[3]);
-	printf("FORKED\n");
-	//int idi = fork();
-	/*int start, end;
-	if (id == 0) {
-		start = 0;
-		end = 0xffffffff / 2;
-	}
-	else {
-		start = 0xffffffff / 2;
-		end = 0xffffffff;
-	}*/
-	int ind = start / step;
-	printf("%x %x %d\n", start, step, ind);
 	for (int i = 0; i < PROC_NUM + 1; i++) {
 		if (i != ind) {
 			close(pipes[i][0]);
@@ -483,20 +472,22 @@ int cracker_forked (char* file_name, int v) {
 		}
 	}
 	int q = 0;
-	printf("%d\n",write(pipes[ind + 1][1], &q, sizeof(int)));
 	clock_t first, last;
 	first = clock();
 	if (v == 0){
-		printf("Current:   %08x - %08x\n", 0x0, 0xffff);
+		printf("Current: %08x-%08x\n", 0x0, 0xffff);
+	}
+	if (type == 0) {
+		wait(NULL);
+		return 0;
 	}
   for (unsigned int i = start; i < end; i++) {
-		if(!(i%0xffff) & i != 0 & v == 0){
+		if((!(i % 0xffff)) && i != 0 && v == 0){
 			last = clock();
-			printf("Current:   %08x - %08x, speed  %f   per ms\n", i, i + 0xffff,
-						0x1000 / (double)((last - first) * 1000 /CLOCKS_PER_SEC));
+			printf("Current: %08x-%08x | Speed %d c/ms\n", i, i + 0xffff,
+						0x1000 / (int)((last - first) * 1000 /CLOCKS_PER_SEC));
 			first = clock();
 		}
-    //printf("\n%08x\n", i);
     hexchar(i, &password);
     a = decipher(mode_hash, mode_cipher, nonce, iv, text, password, text_len);
 
@@ -504,7 +495,6 @@ int cracker_forked (char* file_name, int v) {
       result = i;
 			l = 1;
 			write(pipes[ind + 1][1], &l, sizeof(int));
-		//close(pipes[ind][0]);
 			close(pipes[ind + 1][1]);
       break;
     } else {
@@ -512,17 +502,14 @@ int cracker_forked (char* file_name, int v) {
 			write(pipes[ind + 1][1], &l, sizeof(int));
 		}
 		read(pipes[ind][0], &l, sizeof(int));
-		printf("%d\n", l);
 
 		if(read(pipes[ind][0], &l, sizeof(int)) == -1) {
-			//printf("%d\n", l);
-			printf("smth wrong reading ind = %d\n", ind);
 			return 5;
 		} else {
 		}
 
 		if (l == 1){
-			printf("found!!!!!!!!!!!!!\n");
+			printf("found written info in pipe (unreal situation)!!!!!!!!!!!!!\n");
 			write(pipes[ind + 1][1], &l, sizeof(int));
 			close(pipes[ind + 1][1]);
 			return 0;
@@ -561,13 +548,13 @@ int cracker (char* file_name, int v) {
 	clock_t first, last;
 	first = clock();
 	if (v == 0){
-		printf("Current:   %08x - %08x\n", 0x0, 0xffff);
+		printf("Current: %08x-%08x\n", 0x0, 0xffff);
 	}
   for (unsigned int i = 0x00000000; i < 0xffffffff; i++) {
 		if(!(i%0xffff) & i != 0 & v == 0){
 			last = clock();
-			printf("Current:   %08x - %08x, speed  %f   per ms\n", i, i + 0xffff,
-						0x1000 / (double)((last - first) * 1000 /CLOCKS_PER_SEC));
+			printf("Current: %08x-%08x | Speed: %d c/ms\n", i, i + 0xffff,
+						0x1000 / (int)((last - first) * 1000 /CLOCKS_PER_SEC));
 			first = clock();
 		}
     //printf("\n%08x\n", i);
@@ -646,24 +633,15 @@ int file_checker(char* file_name){
 }
 
 
-int analyse_input_crypt (int argc, char** argv, unsigned char** iv, unsigned char** nonce, int* mode_cipher,
-int* mode_hash, int* crypt_mode, unsigned char** pass, char** input_filename, char** output_filename) {
+int analyse_input_cracker (int argc, char** argv, int* verbose, int*parallel) {
   const struct option long_options[] = {
     {"help", no_argument, NULL, 'h'},
-    {"version", no_argument, NULL, 'v'},
-    {"nonce", required_argument, NULL, 'n'},
-		{"alg", required_argument, NULL, 'a'},
-		{"hmac", required_argument, NULL, 'm'},
-    {"enc", no_argument, NULL, 'e'},
-    {"dec", no_argument, NULL, 'd'},
-    {"pass", required_argument, NULL, 'p'},
-    {"iv", required_argument, NULL, 'i'},
-    {"input", required_argument, NULL, 'f'},
-		{"output", required_argument, NULL, 'o'},
+    {"verbose", no_argument, NULL, 'v'},
+		{"parallel", no_argument, NULL, 'p'},
     {NULL, 0, NULL, 0}
   };
 	int args_here = 0, pass_here = 0;
-  const char* short_options = "hvn:a:m:edp:i:f:o:";
+  const char* short_options = "hvp";
   int wrong = 1, err = 0;
 	char str[2];
   while (optind < argc - 1 || optind < 2){
@@ -671,122 +649,19 @@ int* mode_hash, int* crypt_mode, unsigned char** pass, char** input_filename, ch
     char c = cc;
     switch (c) {
       case 'h': {
-        printf("-v, --version for software version\n");
-        printf("-n, --nonce=[value] for enter nonce (enc)\n");
-        printf("-a, --alg=[value] for enter algo mode\n");
-        printf("-m, --hmac=[value] for enter hmac mode\n");
-				printf("-e, --enc for enctypt mode\n");
-				printf("-d, --dec for decrypt mode\n");
-        printf("-p, --pass=[value] for pass init\n");
-        printf("-i, --iv=[value] for initialization vector\n");
-        printf("-f, --input=[value] for input file\n");
-				printf("-o, --output=[value] for output file\n");
-				wrong = 0;
+        printf("-v, --verbose for print speed\n");
+        printf("-p, --parallel for fork process of cracking\n");
+      	wrong = 0;
 				continue;
       }
       case 'v':{
-        printf("Software version 1.0\n");
-				wrong = 0;
+				*verbose = 0;
 				continue;
-      }
-      case 'n':{
-        if (strlen(optarg) != 132){
-        	return WRONG_VALUE;
-				}
-				else {
-					*nonce = (unsigned char*)malloc(64);
-					for(int i = 0; i < 64; i++){
-						str[0] = optarg[i * 2];
-						str[1] = optarg[i * 2 + 1];
-						(*nonce)[i] = hex_from_str(str, &err);
-						if(err == WRONG_VALUE){
-							return err;
-						}
-					}
-				}
-				args_here = 1;
-      	continue;
-      }
-      case 'i':{
-				if (strlen(optarg) != mode_iv_bytes[*mode_cipher] * 2){
-					printf("WRONG IV LEN\n");
-        	return WRONG_VALUE;
-				}
-				else {
-					*iv = (unsigned char*)malloc(mode_iv_bytes[*mode_cipher]);
-					for(int i = 0; i < mode_iv_bytes[*mode_cipher]; i++){
-						str[0] = optarg[i * 2];
-						str[1] = optarg[i * 2 + 1];
-						(*iv)[i] = hex_from_str(str, &err);
-						if(err == WRONG_VALUE){
-							printf("WRONG IV\n");
-							return err;
-						}
-					}
-				}
-				args_here = 1;
-      	continue;
-      }
-      case 'a':{
-				*mode_cipher = check_inarray(optarg, cipher_modes, 4);
-				if (*mode_cipher == WRONG_VALUE){
-					printf("WRONG CIPHER MODE\n");
-					return WRONG_VALUE;
-        }
-				args_here = 1;
-        continue;
-      }
-      case 'm':{
-				*mode_hash = check_inarray(optarg, hash_modes, 2);
-				if (*mode_hash == WRONG_VALUE){
-				printf("WRONG MODE HASH\n");
-				return WRONG_VALUE;
-        }
-				args_here = 1;
-        continue;
-      }
-      case 'e':{
-				*crypt_mode = ENCRYPT;
-        continue;
-      }
-			case 'd':{
-				*crypt_mode = DECRYPT;
-        continue;
       }
 			case 'p':{
-        if (strlen(optarg) != 8){
-					printf("WRONG PASS LEN\n");
-        	return WRONG_VALUE;
-				}
-				else {
-					*pass = (unsigned char*)malloc(4);
-					for(int i = 0; i < 4; i++){
-						str[0] = optarg[i * 2];
-						str[1] = optarg[i * 2 + 1];
-						(*pass)[i] = hex_from_str(str, &err);
-						if(err == WRONG_VALUE){
-							printf("WRONG PASS\n");
-							return err;
-						}
-					}
-				}
-				pass_here = 1;
+				*parallel = 1;
       	continue;
       }
-      case 'f':{
-				int len = strlen(optarg);
-				*input_filename = (char*)malloc(len + 1);
-				(*input_filename)[len] = '\0';
-				strcpy(*input_filename, optarg);
-				continue;
-      }
-			case 'o':{
-				int len = strlen(optarg);
-				*output_filename = (char*)malloc(len + 1);
-				(*output_filename)[len] = '\0';
-				strcpy(*output_filename, optarg);
-				continue;
-			}
       case -1:{
 				argc--;
 				optind++;
@@ -795,27 +670,7 @@ int* mode_hash, int* crypt_mode, unsigned char** pass, char** input_filename, ch
     }
   }
 	if (wrong == 0){
-		wrong = 0;
+		return 5;
 	}
-	else if (pass_here == 0) {
-		printf("NO PASSWORD\n");
-		wrong = -1;
-	}
-	else if (*crypt_mode == DECRYPT && args_here == 1) {
-		printf("DECRYPT DEFAULT\n");
-		wrong = -1;
-	}
-	else if (*pass == NULL || *crypt_mode == -1 ||
-	*input_filename == NULL || *output_filename == NULL) {
-		printf("NO ONE OF ARGS\n");
-		wrong = -1;
-	}
-	if(wrong == -1){
-		printf("WRONG INPUT END\n");
-		return WRONG_VALUE;
-	}
-	else if (wrong == 0)
-		return 1;
-	else
-  	return 0;
+  return 0;
 }

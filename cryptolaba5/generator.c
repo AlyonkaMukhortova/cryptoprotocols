@@ -122,7 +122,7 @@ unsigned char hex_from_str (char* arg, int* err) {
 int check_inarray (char* arg, char* array[], int count) {
   int res = WRONG_VALUE;
   for (int i = 0; i < count; i++) {
-    printf("%s %s\n", arg, array[i]);
+    //printf("%s %s\n", arg, array[i]);
     if (strcmp(arg, array[i]) == 0) {
       res = i;
     }

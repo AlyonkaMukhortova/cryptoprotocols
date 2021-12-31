@@ -9,6 +9,7 @@ cracker: crack.o cracker.o protocol_funcs.o generator.o
 generator: gen.o generator.o protocol_funcs.o
 	gcc -g -Wall gen.o generator.o protocol_funcs.o -lssl -lcrypto -o generator
 
+
 gen.o:
 	gcc -c gen.c
 

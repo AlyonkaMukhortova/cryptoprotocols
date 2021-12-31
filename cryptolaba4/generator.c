@@ -10,6 +10,7 @@ unsigned char* concatenate(unsigned char* str1, unsigned char* str2, int len1, i
   str1 = (unsigned char*)realloc(str1, len1 + len2 + 1);
   //int len = strlen((char*)str2);
   for (int i = 0; i < len2; i++) {
+    
     str1[len1 + i] = str2[i];
   }
   //memcpy(str1 + strlen((char*)str1), str2, strlen((char*)str2));

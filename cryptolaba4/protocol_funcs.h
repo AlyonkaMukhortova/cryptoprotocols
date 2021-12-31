@@ -7,11 +7,13 @@
 #include <openssl/des.h>
 #include <openssl/sha.h>
 #include "generator.h"
+#include <sys/wait.h>
+#include <unistd.h>
+
 
 #define TEXT_LEN 60
 #define ENCRYPT -11
 #define DECRYPT -12
-#define PROC_NUM 3
 
 
 int mode_key_bytes[4];
@@ -81,8 +83,7 @@ int cracker (char* file_name, int v);
 void analyse_file (char* file_name, int* mode_hash, int* mode_cipher, unsigned char** nonce,
    unsigned char** iv, unsigned char** text, int* text_len);
 
-int analyse_input_crypt (int argc, char** argv, unsigned char** iv, unsigned char** nonce, int* mode_cipher,
-int* mode_hash, int* crypt_mode, unsigned char** pass, char** input_filename, char** output_filename);
+int analyse_input_cracker (int argc, char** argv, int* verbose, int*parallel);
 
 
 #endif
