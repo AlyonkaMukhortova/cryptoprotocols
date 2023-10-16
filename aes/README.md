@@ -1,7 +1,7 @@
 ```
 Usage:
 
-./cipher filename -m MODE -k KEY -i IV \[-vgt\] \[-ed\]
+./cipher filename -m MODE -k KEY -i IV [-vgt] [-ed]
 
 -v, --version for software version
 
