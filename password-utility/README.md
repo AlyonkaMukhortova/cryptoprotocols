@@ -1,3 +1,4 @@
-Usage:
-
-./mask [input file name] [output file name]
+# Usage
+```
+./mask [INPUT FILE NAME] [OUTPUT FILE NAME]
+```
