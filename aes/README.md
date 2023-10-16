@@ -1,6 +1,7 @@
+```
 Usage:
 
-./cipher filename -m \<mode\> -k \<key\> -i \<iv\> \[flags\]
+./cipher filename -m MODE -k KEY -i IV \[-vgt\] \[-ed\]
 
 -v, --version for software version
 
@@ -17,3 +18,4 @@ Usage:
 -g, --debug for debug values
 
 -t, --time for timing
+```
