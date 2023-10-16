@@ -1,5 +1,5 @@
-```
 Usage:
+```
 ./cipher FILENAME -m MODE -k KEY -i IV [-vgt] [-ed]
 
 -v, --version for software version
