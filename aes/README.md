@@ -1,4 +1,4 @@
-Usage:
+# Usage:
 ```
 ./cipher FILENAME -m MODE -k KEY -i IV [-vgt] [-ed]
 
