@@ -1,6 +1,6 @@
 # Usage
 ```
-./crypter -p PASSWORD -i IV -o FILENAME [-vnamf] [-ed]
+./crypter -p PASSWORD -i IV -o FILENAME [-vnamfed]
 
   -v, --version         for software version
   -n, --nonce=[value]   for enter nonce (enc)
