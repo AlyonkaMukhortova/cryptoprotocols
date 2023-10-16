@@ -1,6 +1,6 @@
 Usage:
 
-./cipher filename -m mode -k key -i iv [flags]
+./cipher filename -m <mode> -k <key> -i <iv> [flags]
 
 -v, --version for software version
 
